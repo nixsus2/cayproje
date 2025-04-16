@@ -1,17 +1,22 @@
-import Link from 'next/link'; // Link bileşenini import et
-import Image from 'next/image'; // Image bileşenini import et
+import Link from 'next/link';
+import Image from 'next/image';
 import './globals.css';
+import { createSupabaseServerClient } from '@/lib/supabase/server'; // Sunucu istemcisini import et
+import LogoutButton from './components/LogoutButton'; // LogoutButton bileşenini import et (Doğru yol)
 
 export const metadata = {
   title: 'Çay Siparişleri',
   description: 'Çay sipariş yönetim sistemi',
 };
 
-export default function RootLayout({
+export default async function RootLayout({ // Fonksiyonu async yap
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <html lang="tr" className="h-full"> {/* Ensure html takes full height */}
       <body className="bg-gray-100 flex flex-col min-h-full"> {/* Add flex properties to body */}
@@ -32,11 +37,19 @@ export default function RootLayout({
             </Link>
             {/* Navigasyon Linkleri */}
             <div className="space-x-4">
-              <Link href="/order" className="text-gray-600 hover:text-blue-600">Sipariş Ver</Link>
-              <Link href="/my-orders" className="text-gray-600 hover:text-blue-600">Siparişlerim</Link>
-              <Link href="/dashboard" className="text-gray-600 hover:text-blue-600">Panel</Link>
-              <Link href="/login" className="text-gray-600 hover:text-blue-600">Giriş Yap</Link>
-              {/* TODO: Kullanıcı giriş yapmışsa "Çıkış Yap" butonu gösterilebilir */}
+              {user ? (
+                <>
+                  <Link href="/order" className="text-gray-600 hover:text-blue-600">Sipariş Ver</Link>
+                  <Link href="/my-orders" className="text-gray-600 hover:text-blue-600">Siparişlerim</Link>
+                  <Link href="/dashboard" className="text-gray-600 hover:text-blue-600">Panel</Link>
+                  <LogoutButton />
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="text-gray-600 hover:text-blue-600">Giriş Yap</Link>
+                  <Link href="/register" className="text-gray-600 hover:text-blue-600">Kayıt Ol</Link>
+                </>
+              )}
             </div>
           </nav>
         </header>

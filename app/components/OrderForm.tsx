@@ -157,6 +157,9 @@ export default function OrderForm({ onOrderPlaced, userId }: OrderFormProps) {
     });
   };
 
+  // Seçili ürünü bul
+  const selectedProduct = products.find(p => p.id === currentProductId);
+
   // ----- JSX -----
   return (
     <div className="space-y-6 bg-white p-6 rounded-lg shadow">
@@ -206,11 +209,13 @@ export default function OrderForm({ onOrderPlaced, userId }: OrderFormProps) {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Şeker</label>
-          <div className="mt-1 grid grid-cols-2 gap-2">
-            {(['none', 'low', 'medium', 'high'] as SugarLevel[]).map((level) => (
-              <label key={level} className="inline-flex items-center">
+        {/* Şeker Seviyesi - Sadece Türk Kahvesi için göster */}
+        {selectedProduct?.name === 'Türk Kahvesi' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Şeker</label>
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              {(['none', 'low', 'medium', 'high'] as SugarLevel[]).map((level) => (
+                <label key={level} className="inline-flex items-center">
                 <input
                   type="radio"
                   name="currentSugarLevel"
@@ -222,11 +227,12 @@ export default function OrderForm({ onOrderPlaced, userId }: OrderFormProps) {
                 />
                 <span className="ml-2 text-sm text-gray-700">
                   {level === 'none' ? 'Şekersiz' : level === 'low' ? 'Az Şekerli' : level === 'medium' ? 'Orta' : 'Şekerli'}
-                </span>
-              </label>
-            ))}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* --- Yeni Adet Seçici Başlangıcı --- */}
         <div>
