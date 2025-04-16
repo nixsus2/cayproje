@@ -98,11 +98,8 @@ export default function Login() {
             priority // Login ekranında önemli olduğu için öncelikli yükle
           />
         </div>
-        {/* Başlık ve Slogan */}
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">ÇayAbi Giriş</h1>
-        <p className="text-center text-gray-500 text-sm mb-6">
-          Geleneği Teknolojiyle Harmanladık: ÇayAbi
-        </p>
+        {/* Başlık */}
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">ÇayAbi Giriş</h1> {/* Slogan kaldırıldığı için mb artırıldı */}
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm"> {/* Daha yumuşak köşe ve text boyutu */}
