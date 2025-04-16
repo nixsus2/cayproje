@@ -1,4 +1,4 @@
-{'use client';}
+'use client'; // Süslü parantezler kaldırıldı
 
 import { useState, useEffect } from 'react'; // useEffect eklendi
 import { supabase } from '@/lib/supabase'; // Normal Supabase istemcisi
