@@ -228,19 +228,34 @@ export default function OrderForm({ onOrderPlaced, userId }: OrderFormProps) {
           </div>
         </div>
 
+        {/* --- Yeni Adet Seçici Başlangıcı --- */}
         <div>
-          <label htmlFor="currentQuantity" className="block text-sm font-medium text-gray-700">Adet</label>
-          <input
-            type="number"
-            id="currentQuantity"
-            value={currentQuantity}
-            onChange={(e) => setCurrentQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-            min="1"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            required
-            disabled={isPending}
-          />
+          <label className="block text-sm font-medium text-gray-700">Adet</label>
+          <div className="mt-1 flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={() => setCurrentQuantity(q => Math.max(1, q - 1))} // Azaltma, min 1
+              disabled={isPending || currentQuantity <= 1} // 1 iken pasif
+              className="px-3 py-1 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Adedi azalt"
+            >
+              -
+            </button>
+            <span className="text-lg font-medium text-gray-900 w-8 text-center" aria-live="polite">
+              {currentQuantity}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentQuantity(q => q + 1)} // Artırma
+              disabled={isPending}
+              className="px-3 py-1 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              aria-label="Adedi artır"
+            >
+              +
+            </button>
+          </div>
         </div>
+        {/* --- Yeni Adet Seçici Bitişi --- */}
 
         <div>
           <label htmlFor="currentNotes" className="block text-sm font-medium text-gray-700">Not (Opsiyonel)</label>
