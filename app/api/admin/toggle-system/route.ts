@@ -3,21 +3,20 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { Profile, SystemSettings } from '@/lib/supabase';
 
-// Admin client (Service Role Key ile)
+// Supabase URL ve Key'leri alalım (fonksiyon içinde kullanılacak)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Standart client (Anon Key ile - session doğrulaması için)
-const supabaseAnon = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function POST(request: Request) {
-  // Token'ı al (await ile)
+  // İstemcileri fonksiyon içinde oluştur
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
+  const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey);
+
+  // Token'ı al (await ile) - await geri eklendi
   const cookieStore = await cookies();
   const authTokenCookieName = `sb-${supabaseUrl.split('.')[0].split('//')[1]}-auth-token`;
   let token: string | undefined;
@@ -108,6 +107,11 @@ export async function GET(request: Request) {
     // if (userError || !user) { ... }
 
     try {
+        // Admin istemcisini fonksiyon içinde oluştur
+        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+          auth: { autoRefreshToken: false, persistSession: false }
+        });
+
         const { data: settings, error } = await supabaseAdmin // Herkesin görmesi için Anon client da olabilir
             .from('system_settings')
             .select('is_ordering_active')
