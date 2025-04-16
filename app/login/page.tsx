@@ -1,10 +1,11 @@
-'use client'; // Süslü parantezler kaldırıldı
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'; // Link importu eklendi
-import { supabase } from '@/lib/supabase'; // Güncellenmiş Supabase importu
-import type { Profile, UserRole } from '@/lib/supabase'; // Tipleri import et
+import Link from 'next/link';
+import Image from 'next/image'; // Image importu eklendi
+import { supabase } from '@/lib/supabase';
+import type { Profile, UserRole } from '@/lib/supabase';
 
 export default function Login() {
   const router = useRouter();
@@ -84,34 +85,50 @@ export default function Login() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Çayabi - Giriş Yap</h1>
+    // Arka plan rengini ve padding'i ayarlayalım
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        {/* Logo Eklendi */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/logo.png"
+            alt="ÇayAbi Logo"
+            width={80} // Daha büyük logo boyutu
+            height={80}
+            priority // Login ekranında önemli olduğu için öncelikli yükle
+          />
+        </div>
+        {/* Başlık ve Slogan */}
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">ÇayAbi Giriş</h1>
+        <p className="text-center text-gray-500 text-sm mb-6">
+          Geleneği Teknolojiyle Harmanladık: ÇayAbi
+        </p>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm"> {/* Daha yumuşak köşe ve text boyutu */}
             {error}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-600"> {/* Daha açık renk label */}
               E-posta Adresi
             </label>
             <input
-              type="email" // Tip email olarak değiştirildi
+              type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              // Daha belirgin focus ve yumuşak köşeler
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
               required
               autoComplete="email"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-600">
               Şifre
             </label>
             <input
@@ -119,7 +136,7 @@ export default function Login() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
               required
               autoComplete="current-password"
             />
@@ -128,8 +145,9 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
+            // Daha dolgun buton, yumuşak köşe, geçiş efekti
+            className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out ${
+              loading ? 'opacity-70 cursor-not-allowed' : '' // Daha belirgin pasif durum
             }`}
           >
             {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
