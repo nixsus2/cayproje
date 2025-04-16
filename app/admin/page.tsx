@@ -1,7 +1,7 @@
 'use client'; // Süslü parantezler kaldırıldı
 
 import { useState, useEffect } from 'react'; // useEffect eklendi
-import { supabase } from '@/lib/supabase'; // Normal Supabase istemcisi
+// import { supabase } from '@/lib/supabase'; // Kullanılmıyor, kaldırıldı
 import type { UserRole } from '@/lib/supabase'; // Tipleri import et
 
 // TODO: Bu sayfayı sadece 'admin' rolündeki kullanıcıların erişebilmesi için koruma altına al.
@@ -81,6 +81,7 @@ export default function AdminPanel() {
   };
 
   // Sistem Durumunu Çekme Fonksiyonu
+  // Hata tipini Error olarak belirtelim
   const fetchSystemStatus = async () => {
     setSystemStatusLoading(true);
     setSystemError('');
@@ -92,9 +93,10 @@ export default function AdminPanel() {
       }
       const data = await response.json();
       setIsOrderingActive(data.is_ordering_active);
-    } catch (err: any) {
+    } catch (err: unknown) { // Hata tipini unknown yapalım
       console.error('Error fetching system status:', err);
-      setSystemError(`Sistem durumu alınamadı: ${err.message}`);
+      const message = err instanceof Error ? err.message : 'Bilinmeyen bir hata.';
+      setSystemError(`Sistem durumu alınamadı: ${message}`);
       setIsOrderingActive(null); // Hata durumunda null yap
     } finally {
       setSystemStatusLoading(false);
@@ -122,9 +124,11 @@ export default function AdminPanel() {
       }
       setIsOrderingActive(data.is_ordering_active); // Yeni durumu state'e yansıt
       setSystemMessage(data.message); // Başarı mesajını göster
-    } catch (err: any) {
+    } catch (err: unknown) { // Hata tipini unknown yapalım
       console.error('Error toggling system status:', err);
-      if (!systemError) {
+      const message = err instanceof Error ? err.message : 'Bilinmeyen bir hata.';
+      if (!systemError) { // Sadece henüz bir hata ayarlanmadıysa ayarla
+        setSystemError(`Sistem durumu değiştirilirken bir hata oluştu: ${message}`);
         setSystemError('Sistem durumu değiştirilirken bir hata oluştu.');
       }
     } finally {

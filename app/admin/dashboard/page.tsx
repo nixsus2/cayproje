@@ -3,13 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import type { Order, User } from '@/lib/supabase';
+import type { Order, Profile, OrderItem, Product, OrderStatus } from '@/lib/supabase'; // Added Profile, OrderItem, Product, OrderStatus
 
-type OrderWithUser = Order & { user: User };
+// Renamed type and updated user type to Profile, added order_items with product
+type OrderWithDetails = Order & {
+  user: Profile | null; // User might be null if not logged in? Or use Profile directly if user_id is guaranteed? Assuming Profile for now.
+  order_items: (OrderItem & { product: Product })[];
+};
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [orders, setOrders] = useState<OrderWithUser[]>([]);
+  const [orders, setOrders] = useState<OrderWithDetails[]>([]); // Updated state type
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notificationSound] = useState<HTMLAudioElement | null>(
@@ -42,29 +46,35 @@ export default function AdminDashboard() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [notificationSound]);
+  }, [notificationSound, router]);
 
   const fetchOrders = async () => {
     try {
+      // Updated query to fetch profiles and order_items with products
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
-          user:users(*)
+          user:profiles(*),
+          order_items(*, product:products(*))
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Siparişleri duruma göre sırala
-      const sortedOrders = (data as OrderWithUser[]).sort((a, b) => {
-        const statusOrder = {
+      // Siparişleri duruma göre sırala (Updated type assertion and statusOrder)
+      const sortedOrders = (data as OrderWithDetails[]).sort((a, b) => {
+        const statusOrder: Record<OrderStatus, number> = { // Use OrderStatus type
           'pending': 0,
           'preparing': 1,
-          'completed': 2,
-          'cancelled': 3
+          'ready': 2, // Use 'ready'
+          'delivered': 3, // Use 'delivered'
+          'cancelled': 4 // Adjust order if needed
         };
-        return statusOrder[a.status] - statusOrder[b.status];
+        // Handle potential unknown statuses gracefully
+        const statusA = statusOrder[a.status] ?? 99;
+        const statusB = statusOrder[b.status] ?? 99;
+        return statusA - statusB;
       });
 
       setOrders(sortedOrders);
@@ -90,13 +100,16 @@ export default function AdminDashboard() {
     }
   };
 
-  const getStatusColor = (status: Order['status']) => {
+  // Updated getStatusColor to use correct statuses
+  const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'preparing':
         return 'bg-blue-100 text-blue-800';
-      case 'completed':
+      case 'ready': // Use 'ready'
+        return 'bg-purple-100 text-purple-800'; // Example color for ready
+      case 'delivered': // Use 'delivered'
         return 'bg-green-100 text-green-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
@@ -140,54 +153,79 @@ export default function AdminDashboard() {
         )}
 
         <div className="grid gap-4">
-          {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h2 className="text-xl font-semibold">{order.user.shop_name}</h2>
-                  <p className="text-gray-600">{order.drink_type === 'tea' ? 'Çay' : 'Kahve'} × {order.quantity}</p>
-                  <p className="text-gray-600">Şeker: {order.sugar_count}</p>
-                  {order.notes && <p className="text-gray-600">Not: {order.notes}</p>}
-                  <p className="text-sm text-gray-500">
-                    {new Date(order.created_at).toLocaleString('tr-TR')}
-                  </p>
+          {/* Corrected mapping block */}
+          {orders.map((order) => {
+            // Assuming one item per order for display simplicity
+            const firstItem = order.order_items?.[0];
+            return (
+              <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    {/* Handle potentially null user */}
+                    <h2 className="text-xl font-semibold">{order.user?.shop_name ?? 'Bilinmeyen Dükkan'}</h2>
+                    {/* Access details from the first order item */}
+                    {firstItem ? (
+                      <>
+                        <p className="text-gray-600">{firstItem.product?.name ?? 'Bilinmeyen Ürün'} × {firstItem.quantity}</p>
+                        <p className="text-gray-600">Şeker: {firstItem.sugar_level ?? 'Belirtilmemiş'}</p>
+                        {firstItem.size && <p className="text-gray-600">Boyut: {firstItem.size}</p>}
+                        {firstItem.notes && <p className="text-gray-600">Not: {firstItem.notes}</p>}
+                      </>
+                    ) : (
+                      <p className="text-red-500">Sipariş detayı bulunamadı!</p>
+                    )}
+                    <p className="text-sm text-gray-500">
+                      {new Date(order.created_at).toLocaleString('tr-TR')}
+                    </p>
+                  </div>
+                  {/* Updated status display */}
+                  <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(order.status)}`}>
+                    {order.status === 'pending' && 'Bekliyor'}
+                    {order.status === 'preparing' && 'Hazırlanıyor'}
+                    {order.status === 'ready' && 'Hazır'}
+                    {order.status === 'delivered' && 'Teslim Edildi'}
+                    {order.status === 'cancelled' && 'İptal Edildi'}
+                  </span>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(order.status)}`}>
-                  {order.status === 'pending' && 'Bekliyor'}
-                  {order.status === 'preparing' && 'Hazırlanıyor'}
-                  {order.status === 'completed' && 'Tamamlandı'}
-                  {order.status === 'cancelled' && 'İptal Edildi'}
-                </span>
-              </div>
 
-              <div className="flex gap-2">
-                {order.status === 'pending' && (
-                  <button
-                    onClick={() => updateOrderStatus(order.id, 'preparing')}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    Hazırlamaya Başla
-                  </button>
-                )}
-                {order.status === 'preparing' && (
-                  <button
-                    onClick={() => updateOrderStatus(order.id, 'completed')}
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                  >
-                    Tamamlandı
-                  </button>
-                )}
-                {(order.status === 'pending' || order.status === 'preparing') && (
-                  <button
-                    onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    İptal Et
-                  </button>
-                )}
+                {/* Updated status update buttons */}
+                <div className="flex gap-2">
+                  {order.status === 'pending' && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'preparing')}
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    >
+                      Hazırlamaya Başla
+                    </button>
+                  )}
+                  {order.status === 'preparing' && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'ready')} // Update to 'ready'
+                      className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600" // Use ready color
+                    >
+                      Hazırlandı
+                    </button>
+                  )}
+                   {order.status === 'ready' && ( // Add button for ready -> delivered
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'delivered')} // Update to 'delivered'
+                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    >
+                      Teslim Edildi
+                    </button>
+                  )}
+                  {(order.status === 'pending' || order.status === 'preparing' || order.status === 'ready') && ( // Add 'ready' to cancellation condition
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    >
+                      İptal Et
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {orders.length === 0 && (
             <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-600">
@@ -198,4 +236,4 @@ export default function AdminDashboard() {
       </div>
     </main>
   );
-} 
+}

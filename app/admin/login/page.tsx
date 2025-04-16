@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+// import { supabase } from '@/lib/supabase'; // Kullanılmıyor, kaldırıldı
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -86,4 +86,4 @@ export default function AdminLogin() {
       </div>
     </main>
   );
-} 
+}
